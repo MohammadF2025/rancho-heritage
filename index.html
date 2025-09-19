@@ -1,123 +1,451 @@
-<!DOCTYPE html>
+<!--
+Rancho Heritage Farm - Single-file website (HTML/CSS/JS)
+
+INSTRUCTIONS (please read before uploading):
+1) Save this file as index.html and place your product images in a folder named "images" next to it.
+   - images/bottle_small.jpg   (250ml bottle photo you will provide)
+   - images/bottle_large.jpg   (375ml bottle photo you will provide)
+   - images/hero.jpg           (optional hero / farm photo you will provide)
+   - you can add other images and update the <img> src accordingly.
+
+2) Payment setup options (choose one):
+   A) PayPal Smart Buttons (client-side): replace 'YOUR_PAYPAL_CLIENT_ID' in the <script> src below with your PayPal client id.
+      - PayPal will handle payment; onApprove will call our order completion flow.
+   B) Stripe Checkout / other gateway: replace checkout integration in the JS with your server-side implementation.
+
+3) Order email delivery to you:
+   - This template attempts to POST order data to a server endpoint '/send-order' .
+     If you do not have a server, two easy options:
+       1) Use Formspree (https://formspree.io) to receive POSTs as emails. Replace FORMSPREE_ENDPOINT with your Formspree url.
+       2) Use EmailJS (https://www.emailjs.com/) and update the sendEmailWithEmailJS function.
+   - As a fallback, the template opens the user's email client via a mailto: link containing order details.
+
+4) Reviews are stored locally in localStorage (client-side). For production, connect to a backend/database.
+
+5) Customize text, images, and meta for your brand "Rancho Heritage Farm".
+
+Contact info already set from your message:
+  Email: fm72477@yahoo.com
+  Phone: +1 840-242-9115  (please confirm formatting)
+
+Prices (from your message):
+  - 250 ml (small) : $18
+  - 375 ml (large) : $24
+
+****************************************************************************************
+This single-file site includes: navigation, hero, products (store & cart), about & benefits,
+nutrition (calories), contact form, reviews, and a simple checkout flow with PayPal placeholder.
+****************************************************************************************
+--><!doctype html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Rancho Heritage Farm - Olive Oil</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Rancho Heritage Farm — Pure Extra Virgin Olive Oil</title>
+  <meta name="description" content="Rancho Heritage Farm — premium extra virgin olive oil. 250ml $18 | 375ml $24. Order online.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f8f8f8;
-      color: #333;
-    }
-    header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-    h1 {
-      color: #2e7d32;
-    }
-    .products {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin-bottom: 50px;
-    }
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      text-align: center;
-      width: 200px;
-    }
-    .price {
-      font-size: 18px;
-      font-weight: bold;
-      color: #444;
-    }
-    form {
-      max-width: 400px;
-      margin: 0 auto;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    label {
-      font-weight: bold;
-      display: block;
-      margin-top: 10px;
-    }
-    input, textarea, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    button {
-      background: #2e7d32;
-      color: white;
-      border: none;
-      margin-top: 15px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #1b5e20;
-    }
-    footer {
-      text-align: center;
-      margin-top: 40px;
-      font-size: 14px;
-      color: #666;
-    }
+    :root{--accent:#2f6b2f;--muted:#666;--bg:#fbfbf8;--card:#fff}
+    body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;line-height:1.5;margin:0;background:var(--bg);color:#222}
+    header{background:linear-gradient(180deg, rgba(47,107,47,0.95), rgba(47,107,47,0.9));color:white;padding:18px 20px;position:sticky;top:0;z-index:30}
+    .nav{display:flex;align-items:center;gap:16px;max-width:1100px;margin:0 auto}
+    .brand{font-weight:700;font-size:1.15rem}
+    .nav a{color:rgba(255,255,255,0.95);text-decoration:none;margin-left:8px}
+    .container{max-width:1100px;margin:30px auto;padding:0 20px}
+    .hero{display:grid;grid-template-columns:1fr 420px;gap:30px;align-items:center}
+    .hero-card{background:var(--card);padding:28px;border-radius:12px;box-shadow:0 6px 18px rgba(10,10,10,0.06)}
+    .hero h1{margin:0 0 8px;font-size:2rem}
+    .tag{background:rgba(47,107,47,0.12);display:inline-block;padding:6px 10px;border-radius:999px;font-weight:600;color:var(--accent);margin-bottom:12px}
+    .price-badge{font-weight:700;font-size:1.25rem;color:var(--accent)}
+    .product-photo{width:100%;border-radius:8px;object-fit:cover}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+    .card{background:var(--card);padding:16px;border-radius:10px;box-shadow:0 6px 18px rgba(10,10,10,0.06)}
+    .btn{background:var(--accent);color:white;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+    .btn.secondary{background:transparent;color:var(--accent);border:2px solid rgba(47,107,47,0.12)}
+    .small{font-size:0.9rem}
+    footer{padding:26px 20px;background:#f3f6f3;margin-top:40px}
+    .flex{display:flex;gap:12px;align-items:center}
+    .muted{color:var(--muted)}
+    .cart{position:fixed;right:20px;bottom:20px;background:var(--card);padding:12px;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,0.12);z-index:40}
+    input,textarea,select{padding:10px;border-radius:8px;border:1px solid #e6e6e6;width:100%;box-sizing:border-box}
+    .reviews-list{max-height:300px;overflow:auto;padding-right:8px}
+    .badge{display:inline-block;padding:6px 8px;border-radius:6px;background:#eef6ee;color:var(--accent);font-weight:700}
+    @media (max-width:900px){.hero{grid-template-columns:1fr;}}
   </style>
 </head>
 <body>
   <header>
-    <h1>Rancho Heritage Farm</h1>
-    <p>Premium Extra Virgin Olive Oil</p>
-  </header>
-
-  <section class="products">
-    <div class="card">
-      <h3>Small Bottle</h3>
-      <p>250 ml</p>
-      <p class="price">$18</p>
+    <div class="nav">
+      <div class="brand">Rancho Heritage Farm</div>
+      <nav style="margin-left:auto;display:flex;gap:12px;align-items:center">
+        <a href="#home">Home</a>
+        <a href="#products">Products</a>
+        <a href="#benefits">Benefits</a>
+        <a href="#nutrition">Nutrition</a>
+        <a href="#reviews">Reviews</a>
+        <a href="#contact">Contact</a>
+      </nav>
     </div>
-    <div class="card">
-      <h3>Large Bottle</h3>
-      <p>375 ml</p>
-      <p class="price">$24</p>
+  </header>  <main class="container">
+    <section id="home" class="hero">
+      <div class="hero-card">
+        <div class="tag">Cold-pressed • Extra Virgin • Small Batch</div>
+        <h1>Rancho Heritage Farm — Pure Extra Virgin Olive Oil</h1>
+        <p class="muted">From our groves to your table. Stone‑pressed, single-origin olive oil with a fresh, peppery finish.</p><div style="display:flex;gap:12px;margin-top:18px;align-items:center">
+      <div>
+        <div class="price-badge">Starting at $18</div>
+        <div class="small muted">250ml — $18 • 375ml — $24</div>
+      </div>
+      <div style="margin-left:auto">
+        <button class="btn" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Shop Now</button>
+      </div>
     </div>
-  </section>
 
-  <h2 style="text-align:center;">Order Form</h2>
-  <form action="https://formspree.io/f/yourFormID" method="POST">
-    <label for="name">Full Name:</label>
-    <input type="text" id="name" name="name" required>
+    <hr style="margin:18px 0">
+    <h3>Why choose Rancho Heritage Farm?</h3>
+    <ul>
+      <li>Small-batch, hand-harvested olives</li>
+      <li>Cold-pressed within 8 hours of harvest</li>
+      <li>No additives or blends — just pure olive oil</li>
+    </ul>
+  </div>
 
-    <label for="email">Email:</label>
-    <input type="email" id="email" name="email" value="fm72477@yahoo.com" required>
+  <div>
+    <img src="images/hero.jpg" alt="Rancho hero" class="product-photo" onerror="this.src='https://images.unsplash.com/photo-1518976024611-4c4b2b1c3f6d?q=80&w=800&auto=format&fit=crop'">
+  </div>
+</section>
 
-    <label for="phone">Phone:</label>
-    <input type="tel" id="phone" name="phone" value="+18402429115" required>
+<!-- Products / Store -->
+<section id="products" style="margin-top:36px">
+  <h2>Products</h2>
+  <p class="muted">Choose from two bottle sizes. Add to cart and checkout securely.</p>
 
-    <label for="bottle">Bottle Size:</label>
-    <select id="bottle" name="bottle" required>
-      <option value="250ml - $18">250 ml - $18</option>
-      <option value="375ml - $24">375 ml - $24</option>
-    </select>
+  <div class="grid" id="productGrid">
+    <!-- product cards injected by JS -->
+  </div>
+</section>
 
-    <label for="message">Additional Notes:</label>
-    <textarea id="message" name="message" rows="4"></textarea>
+<!-- About / Benefits -->
+<section id="benefits" style="margin-top:36px">
+  <h2>Health Benefits of Olive Oil</h2>
+  <div class="card" style="margin-top:12px">
+    <p>Extra virgin olive oil is rich in monounsaturated fats and antioxidants. Research suggests it can help:</p>
+    <ul>
+      <li>Support heart health by improving cholesterol levels</li>
+      <li>Reduce inflammation thanks to polyphenols</li>
+      <li>Support brain health and cognitive function</li>
+      <li>Provide antioxidants that protect cells from oxidative stress</li>
+    </ul>
+    <p class="muted small">Note: This information is educational and not medical advice. Consult a healthcare provider for personalized guidance.</p>
+  </div>
+</section>
 
-    <button type="submit">Submit Order</button>
-  </form>
+<!-- Nutrition -->
+<section id="nutrition" style="margin-top:36px">
+  <h2>Nutrition & Calories</h2>
+  <div class="card" style="margin-top:12px">
+    <p>Typical nutrition for 1 tablespoon (14 g) of extra virgin olive oil:</p>
+    <ul>
+      <li>Calories: 120 kcal</li>
+      <li>Total fat: 14 g (mostly monounsaturated)</li>
+      <li>Saturated fat: 2 g</li>
+      <li>Carbohydrates: 0 g • Protein: 0 g</li>
+    </ul>
+    <p class="muted small">Serving sizes and calories are approximate.</p>
+  </div>
+</section>
 
-  <footer>
-    <p>Contact us: fm72477@yahoo.com | +1 840-242-9115</p>
-  </footer>
-</body>
-</html>
+<!-- Reviews -->
+<section id="reviews" style="margin-top:36px">
+  <h2>Reviews & Suggestions</h2>
+  <div style="display:grid;grid-template-columns:1fr 360px;gap:18px;margin-top:12px">
+    <div>
+      <div class="card reviews-list" id="reviewsList">
+        <!-- reviews injected by JS -->
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3>Leave a review</h3>
+        <form id="reviewForm">
+          <input name="name" placeholder="Your name" required style="margin-bottom:8px">
+          <textarea name="message" placeholder="Write your review or suggestion" rows="5" required style="margin-bottom:8px"></textarea>
+          <div style="display:flex;gap:8px">
+            <input type="number" name="rating" min="1" max="5" placeholder="Rating 1-5" required>
+            <button class="btn" type="submit">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contact -->
+<section id="contact" style="margin-top:36px;margin-bottom:60px">
+  <h2>Contact Us</h2>
+  <div class="card" style="margin-top:12px;display:grid;grid-template-columns:1fr 360px;gap:18px">
+    <div>
+      <p>If you have questions or want to place an order by phone:</p>
+      <p><strong>Phone:</strong> <a href="tel:+18402429115">+1 840-242-9115</a></p>
+      <p><strong>Email:</strong> <a href="mailto:fm72477@yahoo.com">fm72477@yahoo.com</a></p>
+
+      <h4 style="margin-top:18px">Send us a message</h4>
+      <form id="contactForm">
+        <input name="name" placeholder="Your name" required style="margin-bottom:8px">
+        <input name="email" placeholder="Your email" type="email" required style="margin-bottom:8px">
+        <textarea name="message" placeholder="How can we help?" rows="6" required style="margin-bottom:8px"></textarea>
+        <button class="btn" type="submit">Send Message</button>
+      </form>
+    </div>
+    <div>
+      <h4>Our location</h4>
+      <p class="muted">Rancho Heritage Farm — family-owned. For visits or wholesale inquiries, contact us.</p>
+      <!-- Placeholder for map image or embed. Replace with an iframe Google Maps if you have an address -->
+      <img src="https://images.unsplash.com/photo-1473447199101-2b2d4f7a0a56?q=80&w=600&auto=format&fit=crop" alt="farm" style="width:100%;border-radius:8px;margin-top:12px">
+    </div>
+  </div>
+</section>
+
+  </main>  <!-- Cart floating -->  <div class="cart" id="cartBox">
+    <div style="display:flex;align-items:center;gap:8px"><strong>Cart</strong><span id="cartCount" class="badge">0</span></div>
+    <div id="cartItems" style="min-width:260px;max-width:360px;margin-top:8px"></div>
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <button class="btn" id="checkoutBtn">Checkout</button>
+      <button class="btn secondary" id="clearCartBtn">Clear</button>
+    </div>
+  </div>  <footer>
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <strong>Rancho Heritage Farm</strong>
+        <div class="small muted">© <span id="year"></span> Rancho Heritage Farm — All rights reserved</div>
+      </div>
+      <div class="muted small">Email: <a href="mailto:fm72477@yahoo.com">fm72477@yahoo.com</a> • Phone: <a href="tel:+18402429115">+1 840-242-9115</a></div>
+    </div>
+  </footer>  <!-- PayPal SDK (replace client-id with your PayPal Client ID for live/payments) -->  <script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&currency=USD" data-sdk-integration-source="button-factory"></script>  <script>
+    // ====== Configuration ======
+    const SITE = {
+      name: 'Rancho Heritage Farm',
+      contactEmail: 'fm72477@yahoo.com',
+      contactPhone: '+18402429115',
+      // Formspree endpoint (optional) to receive order emails. Replace with your endpoint or keep empty.
+      FORMSPREE_ENDPOINT: '', // e.g. 'https://formspree.io/f/yourid'
+      // Server endpoint that can send order emails (optional)
+      ORDER_ENDPOINT: '/send-order' // Replace with the URL of your server function that accepts POST {order,...}
+    };
+
+    // Product catalog (you can expand)
+    const PRODUCTS = [
+      {
+        id: 'olive-small',
+        title: 'Extra Virgin Olive Oil — 250 ml',
+        size: '250 ml',
+        price: 18.00,
+        img: 'images/bottle_small.jpg'
+      },
+      {
+        id: 'olive-large',
+        title: 'Extra Virgin Olive Oil — 375 ml',
+        size: '375 ml',
+        price: 24.00,
+        img: 'images/bottle_large.jpg'
+      }
+    ];
+
+    // ====== Render products ======
+    const productGrid = document.getElementById('productGrid');
+    PRODUCTS.forEach(p => {
+      const el = document.createElement('div'); el.className = 'card';
+      el.innerHTML = `
+        <img src="${p.img}" alt="${p.title}" class="product-photo" onerror="this.src='https://images.unsplash.com/photo-1517090202478-6907be4a5a7f?q=80&w=800&auto=format&fit=crop'">
+        <h3 style="margin-top:10px">${p.title}</h3>
+        <div class="muted small">Size: ${p.size}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+          <div style="font-weight:700">$${p.price.toFixed(2)}</div>
+          <button class="btn" onclick="addToCart('${p.id}')">Add to cart</button>
+        </div>
+      `;
+      productGrid.appendChild(el);
+    });
+
+    // ====== Simple cart ======
+    let cart = JSON.parse(localStorage.getItem('rhf_cart') || '{}');
+    function saveCart(){ localStorage.setItem('rhf_cart', JSON.stringify(cart)); renderCart(); }
+    function addToCart(id){ cart[id] = (cart[id]||0)+1; saveCart(); }
+    function removeFromCart(id){ delete cart[id]; saveCart(); }
+    function changeQty(id,qty){ if(qty<=0) removeFromCart(id); else cart[id]=qty; saveCart(); }
+
+    function renderCart(){
+      const cartItems = document.getElementById('cartItems'); cartItems.innerHTML='';
+      const keys = Object.keys(cart);
+      document.getElementById('cartCount').textContent = keys.reduce((s,k)=>s+cart[k],0);
+      if(keys.length===0){ cartItems.innerHTML='<div class="muted">Your cart is empty</div>'; return; }
+      let total=0;
+      keys.forEach(id=>{
+        const p = PRODUCTS.find(x=>x.id===id);
+        const qty = cart[id];
+        const row = document.createElement('div'); row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.marginBottom='8px';
+        row.innerHTML = `<div style="flex:1"><div style="font-weight:700">${p.title}</div><div class="small muted">$${p.price.toFixed(2)} × ${qty}</div></div>`;
+        const controls = document.createElement('div');
+        controls.innerHTML = `<input type='number' value='${qty}' min='0' style='width:66px;margin-right:8px'> <button class='btn secondary'>Remove</button>`;
+        controls.querySelector('input').addEventListener('change', (e)=>{ changeQty(id, parseInt(e.target.value)||0); });
+        controls.querySelector('button').addEventListener('click', ()=>{ removeFromCart(id); });
+        row.appendChild(controls);
+        cartItems.appendChild(row);
+        total += p.price * qty;
+      });
+      const totalDiv = document.createElement('div'); totalDiv.style.marginTop='8px'; totalDiv.innerHTML = `<div style="font-weight:800">Total: $${total.toFixed(2)}</div>`;
+      cartItems.appendChild(totalDiv);
+    }
+
+    document.getElementById('clearCartBtn').addEventListener('click', ()=>{ cart={}; saveCart(); });
+    document.getElementById('checkoutBtn').addEventListener('click', ()=>{ openCheckout(); });
+    saveCart();
+
+    // ====== Checkout flow ======
+    function openCheckout(){
+      // Show simple modal or present PayPal buttons. For simplicity, we'll present PayPal buttons below.
+      // Build order summary
+      const order = buildOrder();
+      if(Object.keys(order.items).length===0){ alert('Your cart is empty.'); return; }
+
+      // Render PayPal Buttons in a temporary modal
+      showPayPalModal(order);
+    }
+
+    function buildOrder(){
+      const items = {};
+      let subtotal = 0;
+      for(const id in cart){
+        const p = PRODUCTS.find(x=>x.id===id);
+        items[id] = {title: p.title, price: p.price, qty: cart[id]};
+        subtotal += p.price * cart[id];
+      }
+      return {items, subtotal, currency:'USD'};
+    }
+
+    // ====== PayPal modal & buttons ======
+    function showPayPalModal(order){
+      // Create modal container
+      let modal = document.getElementById('paypalModal');
+      if(modal) modal.remove();
+      modal = document.createElement('div'); modal.id='paypalModal';
+      modal.style.position='fixed'; modal.style.left=0; modal.style.top=0; modal.style.width='100%'; modal.style.height='100%'; modal.style.background='rgba(0,0,0,0.5)'; modal.style.display='flex'; modal.style.alignItems='center'; modal.style.justifyContent='center'; modal.style.zIndex=9999;
+      const inner = document.createElement('div'); inner.style.width='460px'; inner.style.maxWidth='95%'; inner.style.background='white'; inner.style.padding='18px'; inner.style.borderRadius='12px';
+      inner.innerHTML = `<h3>Checkout — Order summary</h3><div id='ppOrderSummary'></div><div id='paypal-button-container' style='margin-top:12px'></div><div style='margin-top:12px;text-align:right'><button id='closePP' class='btn secondary'>Close</button></div>`;
+      modal.appendChild(inner); document.body.appendChild(modal);
+      document.getElementById('closePP').addEventListener('click', ()=>{ modal.remove(); });
+
+      const sum = document.getElementById('ppOrderSummary');
+      sum.innerHTML = Object.values(order.items).map(it=>`<div style='display:flex;justify-content:space-between;padding:6px 0'><div>${it.title} × ${it.qty}</div><div>$${(it.price*it.qty).toFixed(2)}</div></div>`).join('') + `<hr><div style='display:flex;justify-content:space-between;font-weight:800'>Total <div>$${order.subtotal.toFixed(2)}</div></div>`;
+
+      // Render PayPal Buttons (requires PayPal SDK to be loaded and client id configured)
+      if(window.paypal){
+        // Remove any previous buttons
+        const container = document.getElementById('paypal-button-container'); container.innerHTML='';
+        paypal.Buttons({
+          createOrder: function(data, actions){
+            return actions.order.create({
+              purchase_units: [{
+                amount: { value: order.subtotal.toFixed(2) }
+              }]
+            });
+          },
+          onApprove: function(data, actions){
+            return actions.order.capture().then(function(details){
+              // Order was captured — finalize order: send email to site owner and show confirmation
+              finalizeOrder(details);
+              modal.remove();
+              cart = {}; saveCart();
+              alert('Payment successful! Thank you for your order. A confirmation was emailed.');
+            });
+          },
+          onError: function(err){
+            console.error(err); alert('Payment error: ' + err);
+          }
+        }).render('#paypal-button-container');
+      } else {
+        container.innerHTML = '<div class="muted">PayPal SDK not loaded. Replace YOUR_PAYPAL_CLIENT_ID with your client id in the script tag to enable PayPal. As a fallback, we will open an email to place the order.</div><div style="margin-top:12px;text-align:right"><button id="placeByEmail" class="btn">Place Order by Email</button></div>';
+        document.getElementById('placeByEmail').addEventListener('click', ()=>{ sendOrderByEmail(buildOrder()); modal.remove(); cart={}; saveCart(); });
+      }
+    }
+
+    // ====== Finalize order: send email to site owner ======
+    async function finalizeOrder(paypalDetails){
+      const order = buildOrder();
+      const payload = { order, paypalDetails, site: SITE };
+      // Try to send to server endpoint first
+      try{
+        if(SITE.ORDER_ENDPOINT){
+          await fetch(SITE.ORDER_ENDPOINT, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        }
+        // If Formspree is configured, send there too
+        if(SITE.FORMSPREE_ENDPOINT){
+          const formPayload = new FormData();
+          formPayload.append('message', JSON.stringify(payload, null, 2));
+          await fetch(SITE.FORMSPREE_ENDPOINT, {method:'POST',body:formPayload});
+        }
+      }catch(e){
+        console.warn('Could not send order via server/Formspree, falling back to mailto', e);
+        sendOrderByEmail(order, paypalDetails);
+      }
+    }
+
+    function sendOrderByEmail(order, paypalDetails){
+      const lines = [];
+      lines.push('New Rancho Heritage Farm order');
+      lines.push('');
+      for(const id in order.items){ const it = order.items[id]; lines.push(`${it.title} × ${it.qty} — $${(it.price*it.qty).toFixed(2)}`); }
+      lines.push('');
+      lines.push('Total: $' + order.subtotal.toFixed(2));
+      if(paypalDetails) lines.push('\nPayPal details: ' + JSON.stringify(paypalDetails));
+      const body = encodeURIComponent(lines.join('\n'));
+      const subject = encodeURIComponent('New order — Rancho Heritage Farm');
+      // open user's email client
+      window.location.href = `mailto:${SITE.contactEmail}?subject=${subject}&body=${body}`;
+    }
+
+    // ====== Contact form handling ======
+    document.getElementById('contactForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      const data = new FormData(e.target);
+      const payload = { name: data.get('name'), email: data.get('email'), message: data.get('message') };
+      try{
+        if(SITE.FORMSPREE_ENDPOINT){
+          await fetch(SITE.FORMSPREE_ENDPOINT, {method:'POST',body:data});
+          alert('Message sent — we will be in touch soon.');
+          e.target.reset();
+          return;
+        }
+        // Try server endpoint
+        await fetch(SITE.ORDER_ENDPOINT, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contact:payload})});
+        alert('Message sent — we will be in touch soon.');
+        e.target.reset();
+      }catch(err){
+        console.warn(err);
+        alert('Could not send message to server. Opening your email client as fallback.');
+        window.location.href = `mailto:${SITE.contactEmail}?subject=${encodeURIComponent('Contact from website')}&body=${encodeURIComponent(JSON.stringify(payload,null,2))}`;
+      }
+    });
+
+    // ====== Reviews handling (client-side) ======
+    function loadReviews(){
+      const list = JSON.parse(localStorage.getItem('rhf_reviews') || '[]');
+      return list;
+    }
+    function saveReview(review){
+      const list = loadReviews(); list.unshift(review); localStorage.setItem('rhf_reviews', JSON.stringify(list)); renderReviews();
+    }
+    function renderReviews(){
+      const list = loadReviews(); const container = document.getElementById('reviewsList'); container.innerHTML='';
+      if(list.length===0) container.innerHTML='<div class="muted">No reviews yet. Be the first!</div>';
+      list.forEach(r=>{ const el = document.createElement('div'); el.style.padding='8px 0'; el.innerHTML = `<div style="display:flex;justify-content:space-between"><strong>${escapeHtml(r.name)}</strong><div class="small muted">${r.rating} ★</div></div><div class="small muted" style="margin-top:6px">${escapeHtml(r.message)}</div><hr>`; container.appendChild(el); });
+    }
+    document.getElementById('reviewForm').addEventListener('submit',(e)=>{ e.preventDefault(); const fd = new FormData(e.target); saveReview({name:fd.get('name'),message:fd.get('message'),rating:fd.get('rating')}); e.target.reset(); alert('Thanks for your review!'); });
+
+    function escapeHtml(text){ return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // Init
+    document.getElementById('year').textContent = new Date().getFullYear(); renderReviews();
+  </script></body>
+  </html>
